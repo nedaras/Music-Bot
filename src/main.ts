@@ -1,5 +1,7 @@
+import { config } from 'dotenv'
+config()
+
 import { Client, Intents } from 'discord.js'
-import { token, activity } from '../bot.json'
 
 import commandHandler from './commands/commandHandler'
 
@@ -12,7 +14,7 @@ const bot = new Client({ intents: [
 
 bot.on('ready', (client) => {
 
-    client.user.setActivity(activity, { type: 'LISTENING' })
+    client.user.setActivity(process.env.DISCORD_CLIENT_ACTIVITY as string, { type: 'LISTENING' })
 
     console.log(`Logged in as: ${client.user.tag}`)
 
@@ -20,4 +22,4 @@ bot.on('ready', (client) => {
 
 bot.on('messageCreate', commandHandler)
 
-bot.login(token)
+bot.login(process.env.DISCORD_CLIENT_TOKEN as string)

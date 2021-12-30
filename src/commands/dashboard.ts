@@ -1,14 +1,6 @@
 import { joinVoiceChannel,VoiceConnection } from '@discordjs/voice'
 import type { Message } from 'discord.js'
-import { playSong } from '../songs/play'
-
-import Queue from '../utils/Queue'
-import { documentCreated, deleteDocument } from '../utils/firebase' 
-
-// index 0 is url ant index 1 os the documents id
-const songs = new Queue<[ string, string ]>()
-
-documentCreated((videoId, id) => { songs.push([ videoId, id ]) })
+import { getCurrentSong, playSong } from '../utils/songs'
 
 export default function (_: string[], message: Message) {
 
@@ -27,12 +19,7 @@ export default function (_: string[], message: Message) {
             
             play(connection)
 
-        } catch(error) {
-
-            console.log(error)
-            
-
-        }
+        } catch(error) { console.log(error) }
 
     }
 
@@ -40,27 +27,18 @@ export default function (_: string[], message: Message) {
 
 }
 
-function play(connection: VoiceConnection, error?: unknown) {
-    
-    if (connection.state.status !== 'disconnected' && !songs.isEmpty()) {
+async function play(connection: VoiceConnection) {
 
-        if (error) {
+    const song = await getCurrentSong()
 
-            console.log(error)    
-            return
-    
-        }
-        
-        const [ videoId, id ] = songs.getLast()
+    if (connection.state.status !== 'disconnected' && song) {
 
-        // eslint-disable-next-line no-shadow
-        playSong(connection, `https://www.youtube.com/watch?v=${videoId}`, (error) => {
+        playSong(connection, song.url, async (error) => {
 
-            // it works i just dont want to delete data for now
-            deleteDocument(id)
-            songs.pop()
+            await song.delete()
+            !error && play(connection)
 
-            play(connection, error)
+            error && console.log(error)
 
         })
 

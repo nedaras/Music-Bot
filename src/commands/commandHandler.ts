@@ -1,5 +1,4 @@
 import type { Message } from 'discord.js'
-import { prefix } from '../../bot.json'
 
 import dashboard from './dashboard'
 
@@ -16,7 +15,7 @@ export default function (message: Message) {
 
     args.shift()
     
-    if (command.charAt(0) === prefix) {
+    if (command.charAt(0) === process.env.DISCORD_CLIENT_PREFIX) {
 
         command = command.substring(1)
 
