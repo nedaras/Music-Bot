@@ -3,14 +3,19 @@ config()
 
 import { Client, Intents } from 'discord.js'
 
-import commandHandler from './commands/commandHandler'
+import commandHandler from './commands/command-handler'
 
-const bot = new Client({ intents: [ 
-    Intents.FLAGS.GUILDS, 
-    Intents.FLAGS.GUILD_MESSAGES,
-    Intents.FLAGS.GUILD_VOICE_STATES
+import { onVoiceChannelEnter, onVoiceChannelExit } from './utils/songs-handler'
 
-] })
+const bot = new Client({
+    intents: [
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_VOICE_STATES
+
+    ]
+})
+
 
 bot.on('ready', (client) => {
 
@@ -21,5 +26,15 @@ bot.on('ready', (client) => {
 })
 
 bot.on('messageCreate', commandHandler)
+bot.on('voiceStateUpdate', (oldState, newState) => {
+
+    const newUserChannel = newState.channel
+    const oldUserChannel = oldState.channel
+    
+    if (oldUserChannel == null && newUserChannel != null) onVoiceChannelEnter(newState, bot)
+    else if(newUserChannel == null) onVoiceChannelExit(oldState, bot)
+    else { onVoiceChannelExit(newState, bot), onVoiceChannelEnter(oldState, bot) }
+
+})
 
 bot.login(process.env.DISCORD_CLIENT_TOKEN as string)

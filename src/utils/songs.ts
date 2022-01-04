@@ -5,9 +5,11 @@ import { firestore } from './firebase-admin'
 
 import ytdl from 'ytdl-core'
 
-interface Song {
-    delete: () => Promise<FirebaseFirestore.WriteResult>;
-    url: string;
+export interface Song {
+    delete: () => Promise<FirebaseFirestore.WriteResult>
+    url: string
+    id: string
+    creatorId: string
 }
 
 export const playSong = (connection: VoiceConnection, validUrl: string, onFinish?: (error: unknown) => void) => {
@@ -53,14 +55,20 @@ export const playSong = (connection: VoiceConnection, validUrl: string, onFinish
 
 export const onSongsUpdate = (): Promise<Song> => new Promise((resolve) => { firestore.collection('songs').orderBy('created_at').onSnapshot((songs) => (songs.docs[0] && resolve(configureObjet(songs.docs[0])))) })
 
-export const onCurrentSongRemoved = (callback: () => void) => {
+export const onDocumentRemoved = (documentId: string): Promise<undefined> => new Promise((resolve) => {
 
-    return null
+    firestore.collection('songs').onSnapshot((songs) => {
 
-}
+        songs.docs.filter((song) => song.id === documentId).length === 0 &&  resolve(undefined)
+
+    })
+
+})
 
 const configureObjet = (song: FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>): Song => ({
     delete: () => firestore.doc(`/songs/${song.id}`).delete(),
-    url: `https://www.youtube.com/watch?v=${song.data().id}`
+    url: `https://www.youtube.com/watch?v=${song.data().video_id}`,
+    id: song.id,
+    creatorId: song.data().creator_id
 
 })
