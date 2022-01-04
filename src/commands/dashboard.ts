@@ -1,8 +1,8 @@
-import { joinVoiceChannel,VoiceConnection } from '@discordjs/voice'
+import { joinVoiceChannel, VoiceConnection } from '@discordjs/voice'
 import type { Message } from 'discord.js'
-import { getCurrentSong, playSong } from '../utils/songs'
+import { onCurrentSongRemoved, onSongsUpdate, playSong } from '../utils/songs'
 
-export default function (_: string[], message: Message) {
+export default async function (_: string[], message: Message) {
 
     const channel = message.member?.voice.channel
 
@@ -14,12 +14,12 @@ export default function (_: string[], message: Message) {
                 channelId: channel.id,
                 guildId: message.guild.id,
                 adapterCreator: message.guild.voiceAdapterCreator
-                
+
             })
-            
+
             play(connection)
 
-        } catch(error) { console.log(error) }
+        } catch (error) { console.log(error) }
 
     }
 
@@ -27,20 +27,25 @@ export default function (_: string[], message: Message) {
 
 }
 
+
 async function play(connection: VoiceConnection) {
 
-    const song = await getCurrentSong()
+    const song = await onSongsUpdate()
 
-    if (connection.state.status !== 'disconnected' && song) {
+    if (connection.state.status !== 'disconnected') {
 
-        playSong(connection, song.url, async (error) => {
+        const player = playSong(connection, song.url, async (error) => {
 
+            console.log('fineshed!')
+            
             await song.delete()
             !error && play(connection)
 
             error && console.log(error)
 
         })
+
+        onCurrentSongRemoved(() => player.stop())
 
     }
 
