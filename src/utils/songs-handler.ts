@@ -1,60 +1,45 @@
-import { joinVoiceChannel, VoiceConnection } from '@discordjs/voice'
-import { Client, VoiceState } from 'discord.js'
-import { onDocumentRemoved, onSongsUpdate, playSong } from './songs'
+import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice'
+import { Client } from 'discord.js'
+import { firestore } from './firebase-admin'
+import { playSong } from './songs'
 
-let connection: VoiceConnection | null = null
-let channelId: string | null = null
+async function songsHandler (bot: Client) {
 
-export function onVoiceChannelEnter(newState: VoiceState, bot: Client) {
+    let player: { destroy: () => null } | null = null
+    let lastSong: FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData> | undefined = undefined
 
-    if (newState.member?.id === process.env.DISCORD_CLIENT_ID && connection && channelId) return
+    firestore.collection('songs').orderBy('created_at').onSnapshot(async (songs) => {
 
-    songsHandler(bot, newState.guild.id)
+        let connection = getVoiceConnection('704926597601296385')
 
-}
+        const song = songs.docs[0]
+        const skipped = !lastSong ? false : songs.docs.filter((song) => lastSong?.id === song.id).length === 0
 
-export function onVoiceChannelExit(oldState: VoiceState, bot: Client) {
+        if (!connection && song) {
 
-    if (oldState.member?.id === process.env.DISCORD_CLIENT_ID) {
+            const { id, voiceAdapterCreator, members } = await bot.guilds.fetch('704926597601296385')
+            const { voice } = await members.fetch(song.data().creator_id)
 
-        connection = null
-        channelId = null
+            voice.channelId && ( connection = joinVoiceChannel({
+                channelId: voice.channelId,
+                guildId: id,
+                adapterCreator: voiceAdapterCreator
 
-        return
+            }) )
 
-    }
+        }
 
-}
+        if (connection) {
 
-async function songsHandler (bot: Client, guild: string) {
+            skipped && player &&  ( player = player.destroy() )
+            song && !player && ( player = playSong(connection, `https://www.youtube.com/watch?v=${song.data().video_id}`, () => firestore.doc(`/songs/${song.id}`).delete()) )
 
-    const song = await onSongsUpdate()
+        }
 
-    const { id, voiceAdapterCreator, members } = await bot.guilds.fetch(guild)
-    const { voice } = await members.fetch(song.creatorId)
-    
-    if (!connection || voice.channelId !== channelId) {
-
-        connection = joinVoiceChannel({
-            channelId: voice.channelId as string,
-            guildId: id,
-            adapterCreator: voiceAdapterCreator
-            
-        })
-
-        channelId = voice.channelId
-
-    }
-
-    const player = playSong(connection, song.url, async (error) => {
-
-        await song.delete()
-        !error && songsHandler(bot, guild)
-
-        error && console.log(error)
+        lastSong = song
 
     })
 
-    onDocumentRemoved(song.id).then(() => player.stop())
-
 }
+
+export default songsHandler
