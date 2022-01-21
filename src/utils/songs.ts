@@ -37,7 +37,7 @@ export const playSong = (connection: VoiceConnection, validUrl: string, onFinish
         subsciber?.unsubscribe()
         player.stop()
 
-        setTimeout(onFinish, 500)
+        setTimeout(onFinish, 250)
     
     })
 

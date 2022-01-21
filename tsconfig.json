@@ -3,6 +3,7 @@
         "target": "ESNext",
         "module": "CommonJS",
         "outDir": "./build",
+        "rootDir": "./src",
         "strict": true,
         "resolveJsonModule": true,
         "esModuleInterop": true,

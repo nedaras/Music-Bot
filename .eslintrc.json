@@ -1,9 +1,0 @@
-{
-    "parser": "@typescript-eslint/parser",
-    "extends": "plugin:@typescript-eslint/recommended",
-    "rules": {
-        "indent": [ "warn", 4 ],
-        "quotes": [ "warn", "single" ],
-        "semi": [ "warn", "never" ]
-    }
-}
