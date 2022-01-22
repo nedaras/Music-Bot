@@ -6,6 +6,9 @@ import { Client, Intents } from 'discord.js'
 import commandHandler from './commands/command-handler'
 
 import songsHandler from './utils/songs-handler'
+import express from 'express'
+import bodyParser, { urlencoded } from 'body-parser'
+import voice from './api/voice'
 
 const bot = new Client({
     intents: [
@@ -16,17 +19,24 @@ const bot = new Client({
     ]
 })
 
+bot.on('messageCreate', commandHandler)
+
+bot.login(process.env.DISCORD_CLIENT_TOKEN as string)
 
 bot.on('ready', (client) => {
 
     client.user.setActivity(process.env.DISCORD_CLIENT_ACTIVITY as string, { type: 'LISTENING' })
-
+    
     songsHandler(client)
+
+    const app = express()
+
+    app.use(express.json())
+    app.use(urlencoded({ extended: false }))
+    app.post('/api/voice', (request, response) => voice(client, request, response))
+
+    app.listen(4000, () => console.log('rest api running on http://localhost:4000'))
 
     console.log(`Logged in as: ${client.user.tag}`)
 
 })
-
-bot.on('messageCreate', commandHandler)
-
-bot.login(process.env.DISCORD_CLIENT_TOKEN as string)

@@ -10,7 +10,7 @@ export interface Song {
     creatorId: string
 }
 
-export const playSong = (connection: VoiceConnection, validUrl: string, onFinish: () => void) => {
+export const playSong = (connection: VoiceConnection, validUrl: string, onFinish: (skipped: boolean) => void) => {
 
     const stream = ytdl(validUrl, {
         filter: 'audioonly',
@@ -31,16 +31,17 @@ export const playSong = (connection: VoiceConnection, validUrl: string, onFinish
     const subsciber = connection.subscribe(player)
     player.play(resource)
     
+    let force = false
     player.on(AudioPlayerStatus.Idle, () => {
 
         stream.destroy()
         subsciber?.unsubscribe()
         player.stop()
 
-        setTimeout(onFinish, 250)
+        onFinish(force)
     
     })
 
-    return { destroy: () => { player.stop(true); return null } }
+    return { destroy: () => { player.stop(force = true); return null } }
 
 }
