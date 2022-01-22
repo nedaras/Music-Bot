@@ -6,9 +6,9 @@ import { Client, Intents } from 'discord.js'
 import commandHandler from './commands/command-handler'
 
 import songsHandler from './utils/songs-handler'
-import express from 'express'
-import bodyParser, { urlencoded } from 'body-parser'
-import voice from './api/voice'
+import express, { urlencoded } from 'express'
+import voice from './api/user'
+import guild from './api/guild'
 
 const bot = new Client({
     intents: [
@@ -33,7 +33,8 @@ bot.on('ready', (client) => {
 
     app.use(express.json())
     app.use(urlencoded({ extended: false }))
-    app.post('/api/voice', (request, response) => voice(client, request, response))
+    app.post('/api/user', (request, response) => voice(client, request, response))
+    app.post('/api/guild', (request, response) => guild(client, request, response))
 
     app.listen(4000, () => console.log('rest api running on http://localhost:4000'))
 
