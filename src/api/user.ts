@@ -1,4 +1,4 @@
-import { Client, InternalDiscordGatewayAdapterCreator } from 'discord.js'
+import { Client } from 'discord.js'
 import { Request, Response } from 'express'
 
 interface ResponseType {
@@ -22,7 +22,6 @@ export default async function handler({ guilds }: Client, request: Request, resp
 
             const { members } = await guilds.fetch(guild_id)
             const { voice } = await members.fetch(user_id)
-
             if (voice.channelId) return response.json({ channel_id: voice.channelId })
             return response.status(404).json({
                 status: 404,
