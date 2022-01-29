@@ -10,12 +10,11 @@ import express, { urlencoded } from 'express'
 import voice from './api/user'
 
 const bot = new Client({
-    intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_VOICE_STATES
-
-    ]
+	intents: [
+		Intents.FLAGS.GUILDS,
+		Intents.FLAGS.GUILD_MESSAGES,
+		Intents.FLAGS.GUILD_VOICE_STATES,
+	],
 })
 
 bot.on('messageCreate', commandHandler)
@@ -23,19 +22,23 @@ bot.on('messageCreate', commandHandler)
 bot.login(process.env.DISCORD_CLIENT_TOKEN as string)
 
 bot.on('ready', (client) => {
+	client.user.setActivity(process.env.DISCORD_CLIENT_ACTIVITY as string, {
+		type: 'LISTENING',
+	})
 
-    client.user.setActivity(process.env.DISCORD_CLIENT_ACTIVITY as string, { type: 'LISTENING' })
-    
-    songsHandler(client)
+	songsHandler(client)
 
-    const app = express()
+	const app = express()
 
-    app.use(express.json())
-    app.use(urlencoded({ extended: false }))
-    app.post('/api/user', (request, response) => voice(client, request, response))
+	app.use(express.json())
+	app.use(urlencoded({ extended: false }))
+	app.post('/api/user', (request, response) =>
+		voice(client, request, response)
+	)
 
-    app.listen(4000, () => console.log('rest api running on http://localhost:4000'))
+	app.listen(4000, () =>
+		console.log('rest api running on http://localhost:4000')
+	)
 
-    console.log(`Logged in as: ${client.user.tag}`)
-
+	console.log(`Logged in as: ${client.user.tag}`)
 })
