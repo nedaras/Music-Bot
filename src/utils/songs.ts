@@ -26,7 +26,7 @@ export const playSong = (
 		// discord-ytdl-core
 		opusEncoded: true,
 		fmt: 's16le',
-		encoderArgs: ['-af', 'bass=g=5:f=110:w=0.3'],
+		encoderArgs: ['-af', 'bass=g=1:f=110:w=0.3'],
 	})
 
 	const resource = createAudioResource(stream, { inlineVolume: true })
